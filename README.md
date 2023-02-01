@@ -1,4 +1,5 @@
 !!! NOTE FROM CREATOR !!!
+
 This code was created back in 2020-2021 and is not fully representative of my current coding practice. 
 For example, type checking is not included here
 
