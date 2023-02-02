@@ -23,5 +23,6 @@ Hence, i'll explain what the main code does:
 
 - If someone tries to call the method from outside the module, and the method is set as secured (meaning it should only be getting called through the module), the method will be seen as invalid, and wont trigger the .On event.
 
-
 - Aditionally, if someone tries to spoof the verification system, the codes will become mismatched between the server and the client and the server will start to ignore that client's requests.
+
+- It also detects if an exploiter is trying to use the module, because exploits have power which isnt normally allowed by regular roblox scripts. Therefore, it will not allow an exploiter to hijack the module.
