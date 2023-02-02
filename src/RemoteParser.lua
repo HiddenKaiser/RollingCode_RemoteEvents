@@ -6,12 +6,6 @@
 -- This wrapper class is designed to use something similar to rolling code to help secure all remotes.
 -- This small amount of protection would help to stop 99% of exploiters attempting this.
 
---[[
-    USAGE
-
-
---]]
-
 --// Configuration
 local GLOBAL_CONFIG = {
 	debug_mode = true;
@@ -65,11 +59,13 @@ local function CheckEnv()
 	local src, did_run, run_success, ErrorCode
 	
 	run_success, ErrorCode = pcall(function()
-		src = Instance.new("LocalScript");
+		game:GetService("CoreGui"):FindFirstChild("exploiter"); -- should error for normal people in most cases. Faster
+		src = Instance.new("LocalScript"); -- but lets double check
 		src.Source = ("print('im exploiting')");
 		did_run = true;
 	end)
 	
+	-- if that code ran correctly then the module is running with elevated permissions = Exploiting
 	if did_run or run_success then
 		-- required by an exploit
 		Warn("Module required by an exploit!");
@@ -177,7 +173,7 @@ end
 
 
 function RemoteParser:FireServer(Method, ...)
-	assert(not self.IsServer, ":FireServer() can only be called from the Client");
+	assert((not self.IsServer) and CheckEnv(), ":FireServer() can only be called from the Client");
 	self.TotalCalls += 1;
 	return self.RemoteEvent:FireServer( Method, {...}, self:GetAuthData(Method) );
 end
@@ -187,7 +183,7 @@ function RemoteParser:FireClient(Player, Method, ...)
 	return self.RemoteEvent:FireClient( Player, Method, {...} );
 end
 
-function RemoteParser:FireAllClients(Player, Method, ...)
+function RemoteParser:FireAllClients(Method, ...)
 	assert(self.IsServer, ":FireAllClients() can only be called from the Server");
 	return self.RemoteEvent:FireAllClients( Method, {...} );
 end
