@@ -12,7 +12,7 @@ USAGE
 First, make the parser for the specific remote you want to parse.
 > local remote = RemoteParser.new( game.ReplicatedStorage.RemoteEvent )
 
-Then, (on the server) implement your methods using the .On function
+Then, implement your methods using the .On function
 >[
 remote.On("BuyShop"):Connect(function(Player, wantedItem)
 	print(Player.Name, "wants", wantedItem);
@@ -29,6 +29,8 @@ local doSecureMethod = true;
 local wrapData = true;
 remote.On("MethodName", doSecureMethod, wrapData):Connect(print);
 ]<
+
+remote.On works both on the server and client
 
 --]]
 
