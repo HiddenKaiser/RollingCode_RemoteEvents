@@ -293,14 +293,13 @@ end
 local function empty(t)
 	for i,v in pairs(t) do
 		if type(v) == "table" then
-			t[i] = empty(v);
+			empty(v);
 		end
        		t[i] = nil;
 	end
 
 	return t;
 end
-
 
 function RemoteParser:Destroy()
 	for i,v in pairs(self.Connections) do
