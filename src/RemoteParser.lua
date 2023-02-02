@@ -174,8 +174,6 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 					return Warn(Player.Name, "failed auth check, Expected:", Expected, " Got:", Given); 
 				end
 				
-				print(RegisteredClientCalls, RegisteredServerCalls);
-				
 				if RegisteredClientCalls and (RegisteredServerCalls > RegisteredClientCalls) then
 					return Warn(Player.Name, "Too many calls recieved, 3rd party tampering expected.");
 				end
