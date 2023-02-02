@@ -25,3 +25,8 @@ wait(5);
 
 -- you can also disconnect them just like connections!
 Connection:Disconnect();
+
+while true do
+	remote:FireAllClients("ClientExample", "hello", "world");
+	wait(1);
+end
