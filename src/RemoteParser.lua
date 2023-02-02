@@ -119,20 +119,20 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 				return (Print("Couldnt find method:", MethodName) and nil);
 			end
 
-            self.TotalCalls += 1;
-            _method.auth[Player].Calls += 1;
+            		self.TotalCalls += 1;
+           		_method.auth[Player].Calls += 1;
 			
 			if _method.secure then
 				
 				local Given = ClientAuthData and ClientAuthData.NextAuth;
-                local RegisteredClientCalls = ClientAuthData and ClientAuthData.Calls;
+                		local RegisteredClientCalls = ClientAuthData and ClientAuthData.Calls;
 				
 				if not Given then  return Warn(Player.Name, "did not include auth data, event requires auth data");  end
 				if type(Given) == "string" then  Given = Given:byte();  end
 				
-				local ServerData = self:GetAuthData(MethodName, Player);
+               			local ServerData = self:GetAuthData(MethodName, Player);
 				local Expected = ServerData and ServerData.NextAuth;
-                local ServerCallsByPlayer = ServerData and ServerData.Calls;
+                		local ServerCallsByPlayer = ServerData and ServerData.Calls;
 				
 				if Given ~= Expected then
 					return Warn(Player.Name, "failed auth check, Expected:", Expected, " Got:", Given); 
@@ -156,7 +156,7 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 			local _method = self:_findMethod(MethodName);
 			if not _method then return end
 
-            local Final = self:WrapData(_method, Arguments);
+            		local Final = self:WrapData(_method, Arguments);
 			
 			return _method:Invoke( unpack(Final) );
 		end));
@@ -199,8 +199,8 @@ end
 function RemoteParser:GetAuthData(Method, Player)
 	local _method = Method and self:_getMethod(Method);
 	if not _method then
-        return {};
-    end
+        	return {};
+   	end
 	
 	local Data = {}
 	
@@ -208,18 +208,18 @@ function RemoteParser:GetAuthData(Method, Player)
 		--// Client
 
 		Data.NextAuth = ("").char( _method.auth:NextInteger(1,100) ); -- prevent exploiters from hijacking string.char by using ("").char
-        Data.Calls = self.TotalCalls;
+        	Data.Calls = self.TotalCalls;
 
 	elseif Player then
 		--// Server
 
 		local auth = _method.auth[Player] or {
-            Random = Random.new(_method.seed);
-            Calls = 0;
-        }
+            		Random = Random.new(_method.seed);
+            		Calls = 0;
+       		}
 
 		Data.NextAuth = auth.Random:NextInteger(1,100);
-        Data.Calls = auth.Calls;
+       		Data.Calls = auth.Calls;
         
 		_method.auth[Player] = auth;
 	end
