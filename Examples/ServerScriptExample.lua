@@ -15,3 +15,13 @@ end)
 remote.On("Method2", true):Connect(function(player, ...)
 	warn(player, "Method 2:", ...);
 end)
+
+-- you can yield on these too!
+remote.On("Test"):Wait();
+
+print("First function!");
+
+wait(5);
+
+-- you can also disconnect them just like connections!
+Connection:Disconnect();
