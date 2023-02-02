@@ -241,6 +241,7 @@ end
 -- get or create the method *Instantly*
 function RemoteParser:_getMethod(Method)
 	local _method = self.Methods[Method];
+	local MethodExists = _method and true;
 	
 	if not _method then
 		_method = ScriptEvents.new();
@@ -252,7 +253,7 @@ function RemoteParser:_getMethod(Method)
 		self.Methods[Method] = _method;
 	end
 	
-	return _method;
+	return _method, MethodExists;
 end
 
 -- Find an existing method. Yields if it cannot find the method
@@ -280,11 +281,14 @@ end
 function RemoteParser:_hookMethod(Method, secure, wrap_data, extra_settings)
 	assert(Method, "Must Pass Method Name");
 	
-	local _method = self:_getMethod(Method);
+	local _method, MethodExists = self:_getMethod(Method);
 	
-	_method.secure = secure;
-	_method.wrap_data = wrap_data;
-	_method.config = (type(extra_settings) == "table" and extra_settings) or {};
+	if not MethodExists then
+		-- method was just created
+		_method.secure = secure;
+		_method.wrap_data = wrap_data;
+		_method.config = (type(extra_settings) == "table" and extra_settings) or {};
+	end
 	
 	return (_method and _method.Invoked);
 end
