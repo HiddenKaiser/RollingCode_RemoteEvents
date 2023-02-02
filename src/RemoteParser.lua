@@ -294,11 +294,11 @@ local function empty(t)
 	for i,v in pairs(t) do
 		if type(v) == "table" then
 			t[i] = empty(v);
-		else
-			t[i] = nil;
 		end
+       		t[i] = nil;
 	end
-	return t
+
+	return t;
 end
 
 
