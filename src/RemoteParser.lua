@@ -168,13 +168,15 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 
 				local ServerData = self:GetAuthData(MethodName, Player);
 				local Expected = ServerData and ServerData.NextAuth;
-				local ServerCallsByPlayer = ServerData and ServerData.Calls;
+				local RegisteredServerCalls = ServerData and ServerData.Calls;
 
 				if Given ~= Expected then
 					return Warn(Player.Name, "failed auth check, Expected:", Expected, " Got:", Given); 
 				end
-
-				if RegisteredClientCalls and (ServerCallsByPlayer > RegisteredClientCalls) then
+				
+				print(RegisteredClientCalls, RegisteredServerCalls);
+				
+				if RegisteredClientCalls and (RegisteredServerCalls > RegisteredClientCalls) then
 					return Warn(Player.Name, "Too many calls recieved, 3rd party tampering expected.");
 				end
 
@@ -243,9 +245,11 @@ function RemoteParser:GetAuthData(Method, Player)
 	if (not self.IsServer) then
 		--// Client
 
+		_method.calls += 1;
+		
 		Data.NextAuth = ("").char( _method.auth:NextInteger(1,100) ); -- prevent exploiters from hijacking string.char by using ("").char
-		Data.Calls = self.TotalCalls;
-
+		Data.Calls = _method.calls;
+		
 	elseif Player then
 		--// Server
 
@@ -283,6 +287,7 @@ function RemoteParser:_getMethod(Method)
 		_method.name = Method;
 		_method.seed = self:GenerateSeed(Method);
 		_method.auth = (self.IsServer and {}) or Random.new(_method.seed);
+		_method.calls = 0;
 
 		self.Methods[Method] = _method;
 	end
