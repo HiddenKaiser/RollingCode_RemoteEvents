@@ -97,7 +97,7 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 		Methods = {};
 		Connections = {};
 		
-		Calls = 0;
+		TotalCalls = 0;
 		
 		IsServer = IsServer;
 		Created = tick();
@@ -105,54 +105,46 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 	
 	setmetatable(self, RemoteParser);
 	
-	-- wrap_data puts all arguments into a table
 	self.On = function(...)
 		return self:_hookMethod(...);
 	end
 	
-	
-	-- now we need to wrap the events on the 
-	
 	if self.IsServer then
 		--// Server
 		
-		table.insert(self.Connections, RemoteEvent.OnServerEvent:Connect(function(Player, Method, Arguments, ClientAuthData)
+		table.insert(self.Connections, RemoteEvent.OnServerEvent:Connect(function(Player, MethodName, Arguments, ClientAuthData)
 			
-			local _method = self:_findMethod(Method);
+			local _method = self:_findMethod(MethodName);
 			if not _method then
-				return (Print("Couldnt find method:", Method) and nil);
-			end;
-			
-			self.Calls += 1;
+				return (Print("Couldnt find method:", MethodName) and nil);
+			end
+
+            self.TotalCalls += 1;
+            _method.auth[Player].Calls += 1;
 			
 			if _method.secure then
 				
-				local Given = ClientAuthData and ClientAuthData.NextAuth
+				local Given = ClientAuthData and ClientAuthData.NextAuth;
+                local RegisteredClientCalls = ClientAuthData and ClientAuthData.Calls;
 				
 				if not Given then  return Warn(Player.Name, "did not include auth data, event requires auth data");  end
 				if type(Given) == "string" then  Given = Given:byte();  end
 				
-				local ServerData = self:GetAuthData(Method, Player);
+				local ServerData = self:GetAuthData(MethodName, Player);
 				local Expected = ServerData and ServerData.NextAuth;
-				local Calls = ServerData and ServerData.Calls;
+                local ServerCallsByPlayer = ServerData and ServerData.Calls;
 				
 				if Given ~= Expected then
 					return Warn(Player.Name, "failed auth check, Expected:", Expected, " Got:", Given); 
 				end
-				if Calls and self.Calls > Calls then
+                
+				if ClientCalls and ServerCallsByPlayer > RegisteredClientCalls then
 					return Warn(Player.Name, "Too many calls recieved, 3rd party tampering expected.");
 				end
 				
 			end
 			
-			local Final = {}
-			if not _method.wrap_data and type(Arguments) == "table" then
-				for i, argument in pairs(Arguments) do
-					Final[i] = argument;
-				end
-			else
-				Final[1] = Arguments
-			end
+			local Final = self:WrapData(_method, Arguments);
 			
 			return _method:Invoke( Player, unpack(Final) );
 		end));
@@ -160,18 +152,11 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 	else
 		--// Client
 		
-		table.insert(self.Connections, RemoteEvent.OnClientEvent:Connect(function(Method, Arguments)
-			local _method = self:_findMethod(Method);
+		table.insert(self.Connections, RemoteEvent.OnClientEvent:Connect(function(MethodName, Arguments)
+			local _method = self:_findMethod(MethodName);
 			if not _method then return end
-			
-			local Final = {}
-			if not _method.wrap_data and type(Arguments) == "table" then
-				for i, argument in pairs(Arguments) do
-					Final[i] = argument;
-				end
-			else
-				Final[1] = Arguments
-			end
+
+            local Final = self:WrapData(_method, Arguments);
 			
 			return _method:Invoke( unpack(Final) );
 		end));
@@ -184,9 +169,10 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 end
 
 
+
 function RemoteParser:FireServer(Method, ...)
 	assert(not self.IsServer, ":FireServer() can only be called from the Client");
-	self.Calls += 1;
+	self.TotalCalls += 1;
 	return self.RemoteEvent:FireServer( Method, {...}, self:GetAuthData(Method) );
 end
 
@@ -201,6 +187,7 @@ function RemoteParser:FireAllClients(Player, Method, ...)
 end
 
 
+
 function RemoteParser:GenerateSeed(Method)
 	local jobId = game.JobId;
 	jobId = (jobId ~= "" and jobId) or "00000000-0000-0000-0000-000000000000"
@@ -208,41 +195,50 @@ function RemoteParser:GenerateSeed(Method)
 	return ( bit(Method) + bit(jobId) ) * GLOBAL_CONFIG.extra_key;
 end
 
+-- compile the required auth data from a method into a table
 function RemoteParser:GetAuthData(Method, Player)
 	local _method = Method and self:_getMethod(Method);
-	if not _method then  return {}  end;
+	if not _method then
+        return {};
+    end
 	
 	local Data = {}
 	
 	if (not self.IsServer) then
 		--// Client
-		Data.NextAuth = ("").char( _method.auth:NextInteger(1,100) );
+
+		Data.NextAuth = ("").char( _method.auth:NextInteger(1,100) ); -- prevent exploiters from hijacking string.char by using ("").char
+        Data.Calls = self.TotalCalls;
+
 	elseif Player then
 		--// Server
-		local auth = _method.auth[Player] or Random.new(_method.seed);
-		Data.NextAuth = auth:NextInteger(1,100);
+
+		local auth = _method.auth[Player] or {
+            Random = Random.new(_method.seed);
+            Calls = 0;
+        }
+
+		Data.NextAuth = auth.Random:NextInteger(1,100);
+        Data.Calls = auth.Calls;
+        
 		_method.auth[Player] = auth;
 	end
 	
 	return Data;
 end
 
-
-function RemoteParser:_hookMethod(Method, secure, wrap_data, extra_settings)
-	assert(Method, "Must Pass Method Name");
-	
-	local _method = self:_getMethod(Method);
-	
-	_method.secure = secure;
-	_method.wrap_data = wrap_data;
-	_method.config = (type(extra_settings) == "table" and extra_settings) or {};
-	
-	return (_method and _method.Invoked);
+-- rewrap the data depending on settings
+function RemoteParser:WrapData(_method, Arguments)
+    if not _method.wrap_data and type(Arguments) == "table" then
+        return table.clone(Arguments);
+    else
+        return {Arguments};
+    end
 end
 
-
+-- get or create the method *Instantly*
 function RemoteParser:_getMethod(Method)
-	local _method = self.Methods[Method]
+	local _method = self.Methods[Method];
 	
 	if not _method then
 		_method = ScriptEvents.new();
@@ -257,6 +253,7 @@ function RemoteParser:_getMethod(Method)
 	return _method;
 end
 
+-- Find an existing method. Yields if it cannot find the method
 function RemoteParser:_findMethod(Method)
 	local _method = self.Methods[Method];
 	
@@ -276,6 +273,20 @@ function RemoteParser:_findMethod(Method)
 	
 	return _method;
 end
+
+-- hook into the method and return the invoked state event.
+function RemoteParser:_hookMethod(Method, secure, wrap_data, extra_settings)
+	assert(Method, "Must Pass Method Name");
+	
+	local _method = self:_getMethod(Method);
+	
+	_method.secure = secure;
+	_method.wrap_data = wrap_data;
+	_method.config = (type(extra_settings) == "table" and extra_settings) or {};
+	
+	return (_method and _method.Invoked);
+end
+
 
 
 -- put down at the bottom for readiblity 
@@ -301,14 +312,18 @@ function RemoteParser:Destroy()
 end
 
 
--- clear player memory when they leave, weak tables dont work here
-Players.PlayerRemoving:Connect(function(Player)
-	for _, parsed in pairs(ParsedRemotes) do
-		for _,method in pairs(parsed.Methods) do
-			method.auth[Player] = nil;
-		end
-	end
-end)
+if IsServer then
+    
+    -- clear player memory when they leave, weak tables dont work here
+    Players.PlayerRemoving:Connect(function(Player)
+        for _, parsed in pairs(ParsedRemotes) do
+            for _,method in pairs(parsed.Methods) do
+                method.auth[Player] = nil;
+            end
+        end
+    end)
+
+end
 
 
 return CheckEnv() and RemoteParser;
