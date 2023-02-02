@@ -68,7 +68,7 @@ local function CheckEnv()
 	-- if that code ran correctly then the module is running with elevated permissions = Exploiting
 	if did_run or run_success then
 		-- required by an exploit
-		Warn("Module required by an exploit!");
+		-- Warn("Module required by an exploit!"); -- shouldn't tell the exploiter we're detecting them
 		return false;
 	end
 	
