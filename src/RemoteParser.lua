@@ -86,9 +86,7 @@ local function CheckEnv()
 	local src, did_run, run_success, ErrorCode
 
 	run_success, ErrorCode = pcall(function()
-		game:GetService("CoreGui"):FindFirstChild("exploiter"); -- should error for normal people in most cases. Faster
-		src = Instance.new("LocalScript"); -- but lets double check
-		src.Source = ("print('im exploiting')");
+		game:GetService("CoreGui"):FindFirstChild("exploiter"); -- should not be able to pass security check
 		did_run = true;
 	end)
 
@@ -221,8 +219,8 @@ end
 
 function RemoteParser:GenerateSeed(Method)
 	local jobId = game.JobId;
-	jobId = (jobId ~= "" and jobId) or "00000000-0000-0000-0000-000000000000"
-
+	jobId = (jobId ~= "" and jobId) or "00000000-0000-0000-0000-000000000000";
+	
 	return ( bit(Method) + bit(jobId) ) * GLOBAL_CONFIG.extra_key;
 end
 
