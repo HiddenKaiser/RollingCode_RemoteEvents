@@ -148,13 +148,22 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 			end
 
 			self.TotalCalls += 1;
+			local PartialData = _method.auth[Player];
+			if PartialData then
+				PartialData.Calls += 1;
+			end
+			
 			
 			if _method.secure then
-
+				
+				ClientAuthData = typeof(ClientAuthData) == "table" and ClientAuthData;
 				local Given = ClientAuthData and ClientAuthData.NextAuth;
 				local RegisteredClientCalls = ClientAuthData and ClientAuthData.Calls;
 
-				if not Given then  return Warn(Player.Name, "did not include auth data, event requires auth data");  end
+				if not Given then
+					return Warn(Player.Name, "did not include auth data, event requires auth data");
+				end
+				
 				if type(Given) == "string" then  Given = Given:byte();  end
 
 				local ServerData = self:GetAuthData(MethodName, Player);
@@ -170,8 +179,6 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 				end
 
 			end
-			
-			_method.auth[Player].Calls += 1;
 
 			local Final = self:WrapData(_method, Arguments);
 
