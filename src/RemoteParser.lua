@@ -305,7 +305,7 @@ end
 Players.PlayerRemoving:Connect(function(Player)
 	for _, parsed in pairs(ParsedRemotes) do
 		for _,method in pairs(parsed.Methods) do
-			method[Player] = nil;
+			method.auth[Player] = nil;
 		end
 	end
 end)
