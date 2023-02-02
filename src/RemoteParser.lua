@@ -136,6 +136,7 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 	self.On = function(...)
 		return self:_hookMethod(...);
 	end
+	self.on = self.On; -- alias to save some frustration
 	
 	if self.IsServer then
 		--// Server
