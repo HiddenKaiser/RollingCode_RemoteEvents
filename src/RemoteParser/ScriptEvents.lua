@@ -1,3 +1,5 @@
+-- Emulate a RbxScriptSignal efficiently using coroutines.
+
 local Connection = {}
 
 local ConnectionBase = {}
