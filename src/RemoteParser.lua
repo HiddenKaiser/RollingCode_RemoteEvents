@@ -301,4 +301,14 @@ function RemoteParser:Destroy()
 end
 
 
+-- clear player memory when they leave, weak tables dont work here
+Players.PlayerRemoving:Connect(function(Player)
+	for _, parsed in pairs(ParsedRemotes) do
+		for _,method in pairs(parsed.Methods) do
+			method[Player] = nil;
+		end
+	end
+end)
+
+
 return CheckEnv() and RemoteParser;
