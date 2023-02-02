@@ -6,6 +6,12 @@
 -- This wrapper class is designed to use something similar to rolling code to help secure all remotes.
 -- This small amount of protection would help to stop 99% of exploiters attempting this.
 
+--[[
+    USAGE
+
+
+--]]
+
 --// Configuration
 local GLOBAL_CONFIG = {
 	debug_mode = true;
@@ -20,7 +26,7 @@ local Debris = game:GetService("Debris");
 
 --// Internal
 
-local ScriptEvents = require(script:WaitForChild("ScriptEvents"));
+local ScriptEvents = require(script:WaitForChild("ScriptEvents")); -- RbxScriptSignal Emulator
 
 local IsServer = RunService:IsServer();
 local IsStudio = RunService:IsStudio();
@@ -40,10 +46,10 @@ end
 
 -- convert text into a combined number
 local function bit(str)
-	local numbers, final = {str:byte(1,-1)}, 0;
+	local numbers, final = { str:byte(1,-1) }, 0;
 	for _,s in ipairs(numbers) do
 		local n = tonumber(s);
-		final += n or "";
+		final += (n or "");
 	end
 	return (final or 0);
 end
@@ -301,9 +307,10 @@ local function empty(t)
 	return t;
 end
 
+
 function RemoteParser:Destroy()
 	for i,v in pairs(self.Connections) do
-		v:Disconnect(); v = nil;
+		v:Disconnect();
 		self.Connections[i] = nil;
 	end
 	
