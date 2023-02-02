@@ -287,18 +287,13 @@ function RemoteParser:Destroy()
 		self.Connections[i] = nil;
 	end
 	
-	local function empty(t)
-		for i,v in pairs(t) do
-			if type(v) == "table" then
-				t[i] = empty(v);
-			else
-				t[i] = nil;
-			end
+	for i,v in pairs(self) do
+		if type(v) == "table" then
+			self[i] = empty(v);
+		else
+			self[i] = nil;
 		end
-		return t
 	end
-	
-	empty(self);
 end
 
 return RemoteParser;
