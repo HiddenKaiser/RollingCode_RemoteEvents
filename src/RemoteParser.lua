@@ -1,9 +1,3 @@
---[[
-> RemoteParser.lua
- >> ScriptEvents.lua
---]]
-
-
 -- !!! NOTE FROM CREATOR
 -- This code was created back in 2020-2021 and is not fully representative of my current coding practice
 -- for example, type checking is not included here
@@ -11,7 +5,6 @@
 
 -- This wrapper class is designed to use something similar to rolling code to help secure all remotes.
 -- This small amount of protection would help to stop 99% of exploiters attempting this.
--- This also allows for multiple events on a singular remote object, which many games use
 
 --// Configuration
 local GLOBAL_CONFIG = {
@@ -73,7 +66,7 @@ local function CheckEnv()
 	
 	if did_run or run_success then
 		-- required by an exploit
-		Warn("Called by an exploit!");
+		Warn("Module required by an exploit!");
 		return false;
 	end
 	
@@ -112,9 +105,13 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 	
 	setmetatable(self, RemoteParser);
 	
-	self.On = function(...) -- wrap_data puts all arguments into a table
+	-- wrap_data puts all arguments into a table
+	self.On = function(...)
 		return self:_hookMethod(...);
 	end
+	
+	
+	-- now we need to wrap the events on the 
 	
 	if self.IsServer then
 		--// Server
@@ -188,7 +185,7 @@ end
 
 
 function RemoteParser:FireServer(Method, ...)
-	assert(not self.IsServer and CheckEnv(), ":FireServer() can only be called from the Client");
+	assert(not self.IsServer, ":FireServer() can only be called from the Client");
 	self.Calls += 1;
 	return self.RemoteEvent:FireServer( Method, {...}, self:GetAuthData(Method) );
 end
@@ -281,19 +278,27 @@ function RemoteParser:_findMethod(Method)
 end
 
 
+-- put down at the bottom for readiblity 
+local function empty(t)
+	for i,v in pairs(t) do
+		if type(v) == "table" then
+			t[i] = empty(v);
+		else
+			t[i] = nil;
+		end
+	end
+	return t
+end
+
+
 function RemoteParser:Destroy()
 	for i,v in pairs(self.Connections) do
 		v:Disconnect(); v = nil;
 		self.Connections[i] = nil;
 	end
 	
-	for i,v in pairs(self) do
-		if type(v) == "table" then
-			self[i] = empty(v);
-		else
-			self[i] = nil;
-		end
-	end
+	empty(self);
 end
 
-return RemoteParser;
+
+return CheckEnv() and RemoteParser;
