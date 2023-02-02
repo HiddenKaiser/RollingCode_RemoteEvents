@@ -6,6 +6,32 @@
 -- This wrapper class is designed to use something similar to rolling code to help secure all remotes.
 -- This small amount of protection would help to stop 99% of exploiters attempting this.
 
+--[[
+USAGE
+
+First, make the parser for the specific remote you want to parse.
+> local remote = RemoteParser.new( game.ReplicatedStorage.RemoteEvent )
+
+Then, (on the server) implement your methods using the .On function
+>[
+remote.On("BuyShop"):Connect(function(Player, wantedItem)
+	print(Player.Name, "wants", wantedItem);
+end)
+]<
+
+RemoteParser.On has 2 option parameters, SecureMethod: boolean and WrapData: boolean
+
+SecureMethod will use the previously described rolling code technique to help secure remotes efficiently.
+WrapData will wrap all arguments in a table. Ex: > remote.On("Method1", false, true):Connect(function( Player, arguments: {any} )
+
+>[
+local doSecureMethod = true;
+local wrapData = true;
+remote.On("MethodName", doSecureMethod, wrapData):Connect(print);
+]<
+
+--]]
+
 --// Configuration
 local GLOBAL_CONFIG = {
 	debug_mode = true;
