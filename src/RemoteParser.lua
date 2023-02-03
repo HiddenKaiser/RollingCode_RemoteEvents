@@ -156,7 +156,7 @@ function RemoteParser.new(RemoteEvent: Instance, Settings)
 			end
 			
 			
-			if _method.secure then
+			if _method.config.secure then
 				
 				ClientAuthData = typeof(ClientAuthData) == "table" and ClientAuthData;
 				local Given = ClientAuthData and ClientAuthData.NextAuth;
@@ -269,14 +269,15 @@ end
 
 -- rewrap the data depending on settings
 function RemoteParser:WrapData(_method, Arguments)
-	if not _method.wrap_data and type(Arguments) == "table" then
+	if not _method.config.wrap_data and type(Arguments) == "table" then
 		return table.clone(Arguments);
 	else
 		return {Arguments};
 	end
 end
 
--- get or create the method *Instantly*
+
+-- get or create the method *Instantly* | used by hookMethod
 function RemoteParser:_getMethod(Method)
 	local _method = self.Methods[Method];
 	local MethodExists = _method and true;
@@ -288,12 +289,30 @@ function RemoteParser:_getMethod(Method)
 		_method.seed = self:GenerateSeed(Method);
 		_method.auth = (self.IsServer and {}) or Random.new(_method.seed);
 		_method.calls = 0;
-
+		_method.config = {}; -- settings applied inside of hookMethod
+		
 		self.Methods[Method] = _method;
 	end
 
 	return _method, MethodExists;
 end
+
+-- hook into the method and return the invoked state event.
+function RemoteParser:_hookMethod(Method, secure, wrap_data, extra_settings)
+	assert(Method, "Must Pass Method Name");
+
+	local _method, MethodExists = self:_getMethod(Method);
+
+	if not MethodExists then
+		-- method was just created
+		_method.config = (type(extra_settings) == "table" and extra_settings) or {};
+		_method.config.secure = secure;
+		_method.config.wrap_data = wrap_data;
+	end
+
+	return (_method and _method.Invoked);
+end
+
 
 -- Find an existing method. Yields if it cannot find the method
 function RemoteParser:_findMethod(Method)
@@ -314,22 +333,6 @@ function RemoteParser:_findMethod(Method)
 	end
 
 	return _method;
-end
-
--- hook into the method and return the invoked state event.
-function RemoteParser:_hookMethod(Method, secure, wrap_data, extra_settings)
-	assert(Method, "Must Pass Method Name");
-
-	local _method, MethodExists = self:_getMethod(Method);
-
-	if not MethodExists then
-		-- method was just created
-		_method.secure = secure;
-		_method.wrap_data = wrap_data;
-		_method.config = (type(extra_settings) == "table" and extra_settings) or {};
-	end
-
-	return (_method and _method.Invoked);
 end
 
 
