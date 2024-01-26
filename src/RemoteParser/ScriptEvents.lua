@@ -39,9 +39,21 @@ function InvokedBase:Connect(f)
 	return Data;
 end
 
-function InvokedBase:Wait()
-	local Connection = self.INTERNAL_Reference
-	Connection.Yielded[#Connection.Yielded + 1] = coroutine.running()
+function InvokedBase:Wait(timeout: number?)
+	local connection = self.INTERNAL_Reference
+	local currentCoroutine = coroutine.running()
+	local identifier = #connection.Yielded + 1
+	connection.Yielded[identifier] = currentCoroutine
+
+	if timeout then
+		task.delay(timeout, function()
+			if connection.Yielded[identifier] == currentCoroutine then
+				connection.Yielded[identifier] = nil
+				coroutine.resume(currentCoroutine) -- pass nil
+			end
+		end)
+	end
+
 	return coroutine.yield()
 end
 
