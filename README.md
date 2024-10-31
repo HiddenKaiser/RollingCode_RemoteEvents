@@ -1,5 +1,5 @@
 
-- This wrapper class is designed to use something similar to rolling code to help secure all remotes. This small amount of protection would help to stop 99% of exploiters attempting this. This also allows for multiple events on a singular remote object, which many games use
+- This wrapper class is designed to use something similar to rolling code to help secure all remotes. This small amount of protection would help to stop 99% of exploiters attempting this. This also allows for multiple events on a singular remote object, which many games use, without long conditional spanning trees
 
 README taken from RemoteParser.lua comments
 
