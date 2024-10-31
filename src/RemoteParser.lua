@@ -1,7 +1,3 @@
--- !!! NOTE FROM CREATOR
--- This code was created back in 2020-2021 and is not fully representative of my current coding practice
--- for example, type checking is not included here
-
 
 -- This wrapper class is designed to use something similar to rolling code to help secure all remotes.
 -- This small amount of protection would help to stop 99% of exploiters attempting this.
